@@ -71,4 +71,3 @@ temp/
 # Development
 debug_*.py
 temp_*.py
-test_*.py
