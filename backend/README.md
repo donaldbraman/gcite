@@ -1,19 +1,25 @@
 # gCite Backend API
 
-FastAPI backend for intelligent citation search.
+FastAPI backend for intelligent citation search with Gemini AI agents.
 
-## Phase 1 Implementation
+## Current Implementation (Phase 2)
 
-This is the Phase 1 implementation which includes:
+Phase 1:
 - ✅ FastAPI backend skeleton with routing
 - ✅ cite-assist API client with retry logic
 - ✅ Pydantic models for request/response validation
 - ✅ Health check and root endpoints
-- ✅ Basic search endpoint (no AI agents yet)
+- ✅ Basic search endpoint
 - ✅ Configuration management
 - ✅ Unit tests
 
-Phase 2 will add Gemini AI agents for filtering, ranking, and formatting.
+Phase 2:
+- ✅ Gemini Filter Agent (relevance evaluation)
+- ✅ Gemini Rank Agent (importance ranking)
+- ✅ Gemini Format Agent (professional formatting)
+- ✅ Integrated AI pipeline
+- ✅ Graceful degradation when agents unavailable
+- ✅ 16 unit tests passing
 
 ## Setup
 
@@ -39,6 +45,9 @@ cp .env.example .env
 
 Required settings:
 - `CITE_ASSIST_API_URL` - URL of your cite-assist instance (default: http://localhost:8000)
+- `GOOGLE_GENAI_API_KEY` - Your Gemini API key (for AI agents)
+
+Note: If `GOOGLE_GENAI_API_KEY` is not set, the system falls back to basic formatting without AI enhancement.
 
 ### 4. Run the Server
 
@@ -81,7 +90,13 @@ Content-Type: application/json
 }
 ```
 
-Returns search results from cite-assist (no AI filtering in Phase 1).
+When `filter=true` and Gemini API key is configured:
+1. Semantic search via cite-assist (gets 2x requested results)
+2. AI filtering removes irrelevant chunks
+3. AI ranking orders by importance
+4. AI formatting creates professional output
+
+When agents unavailable, falls back to basic formatting.
 
 ## Testing
 
@@ -100,6 +115,33 @@ pytest --cov=api --cov=services --cov=config
 pytest tests/test_api.py::test_health_endpoint -v
 ```
 
+## Gemini AI Agents
+
+### Filter Agent
+Evaluates each chunk for relevance to the query:
+- Analyzes query intent and context
+- Scores confidence (0.0-1.0)
+- Filters chunks below threshold
+- Parallel evaluation for performance
+
+### Rank Agent
+Re-orders filtered chunks by importance:
+- Direct relevance to query
+- Strength of evidence
+- Source credibility
+- Recency considerations
+
+### Format Agent
+Creates professional citation output:
+- Multiple citation styles (APA, MLA, Chicago, Bluebook)
+- Relevance indicators
+- Contextual quotes
+- Grouped by source
+
+### Cost
+- ~$0.0026 per query (~$2.60 per 1000 queries)
+- Extremely cost-effective with Gemini 2.5 Flash Lite
+
 ## Project Structure
 
 ```
@@ -109,6 +151,12 @@ backend/
 │   ├── main.py          # FastAPI application
 │   ├── routes.py        # API endpoints
 │   └── models.py        # Pydantic models
+├── agents/              # Gemini AI agents (Phase 2)
+│   ├── __init__.py
+│   ├── base.py          # Base agent class
+│   ├── filter.py        # Filter agent
+│   ├── rank.py          # Rank agent
+│   └── format.py        # Format agent
 ├── services/
 │   ├── __init__.py
 │   └── cite_assist.py   # cite-assist client
@@ -117,7 +165,8 @@ backend/
 │   └── settings.py      # Configuration
 ├── tests/
 │   ├── __init__.py
-│   └── test_api.py      # API tests
+│   ├── test_api.py      # API tests
+│   └── test_agents.py   # Agent tests
 ├── requirements.txt
 ├── pyproject.toml
 ├── pytest.ini
@@ -138,14 +187,13 @@ Settings are managed via `config/settings.py` using Pydantic. All settings can b
 
 See `.env.example` for available settings.
 
-## Next Steps (Phase 2)
+## Next Steps (Phase 3)
 
-- [ ] Implement Gemini filter agent
-- [ ] Implement ranking agent
-- [ ] Implement formatting agent
 - [ ] Add caching with Redis
 - [ ] Add rate limiting
 - [ ] Add monitoring/metrics
+- [ ] Performance optimization
+- [ ] Enhanced error handling
 
 ## License
 
